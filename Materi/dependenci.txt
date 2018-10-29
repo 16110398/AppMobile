@@ -1,0 +1,110 @@
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:26.+'
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:design:26.+'
+    compile 'com.android.support:recyclerview-v7:26.+'
+    compile 'com.android.support:cardview-v7:26.+'
+    compile 'com.squareup.okhttp3:okhttp:3.6.0'
+    compile 'com.github.bumptech.glide:glide:4.0.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0'
+}
+
+
+
+final TextView tvWeather = (TextView) findViewById(R.id.tv_weather);
+        final TextView tvTemp = (TextView) findViewById(R.id.tv_temp);
+        final ImageView img = (ImageView) findViewById(R.id.imageView);
+        final TextView tvDesc = (TextView) findViewById(R.id.tv_desc);
+
+        String url = "http://api.openweathermap.org/data/2.5/weather?" +
+                "q=yogyakarta&appid=4de4dd041e499ca8a4f6692097befdae";
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Toast.makeText(getApplicationContext(),
+                        "Tidak dapat terhubung server", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String responseData = response.body().string();
+                try{
+                    JSONObject objData = new JSONObject(responseData);
+                    final JSONArray arrayWeather = objData.getJSONArray("weather");
+                    final JSONObject objWeather = new JSONObject(arrayWeather.get(0).toString());
+                    final JSONObject objTemp = new JSONObject(objData.get("main").toString());
+                    double temp = (objTemp.getDouble("temp"))-273.15;
+                    final String celcius = String.valueOf(String.format("%.1f", temp));
+
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                tvWeather.setText(objWeather.get("main").toString());
+                                tvDesc.setText(objWeather.get("description").toString());
+                                tvTemp.setText(celcius+"°C");
+
+                                String urlIcon = "http://openweathermap.org/img/w/"+objWeather.get("icon")+".png";
+                                Glide.with(MainActivity.this)
+                                        .load(urlIcon)
+                                        .into(img);
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+
+
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+public class PresidentData {
+    public static String[][] data = new String[][]{
+            {"Soekarno", "Presiden Pertama RI", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Presiden_Sukarno.jpg/418px-Presiden_Sukarno.jpg"},
+            {"Soeharto", "Presiden Kedua RI", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/President_Suharto%2C_1993.jpg/468px-President_Suharto%2C_1993.jpg"},
+            {"Bacharuddin Jusuf Habibie", "Presiden Ketiga RI", "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Bacharuddin_Jusuf_Habibie_official_portrait.jpg/520px-Bacharuddin_Jusuf_Habibie_official_portrait.jpg"},
+            {"Abdurrahman Wahid", "Presiden Keempat RI", "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/President_Abdurrahman_Wahid_-_Indonesia.jpg/486px-President_Abdurrahman_Wahid_-_Indonesia.jpg"},
+            {"Megawati Soekarnoputri", "Presiden Kelima RI", "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/President_Megawati_Sukarnoputri_-_Indonesia.jpg/540px-President_Megawati_Sukarnoputri_-_Indonesia.jpg"},
+            {"Susilo Bambang Yudhoyono", "Presiden Keenam RI", "https://upload.wikimedia.org/wikipedia/commons/5/58/Presiden_Susilo_Bambang_Yudhoyono.png"},
+            {"Joko Widodo", "Presiden Ketujuh RI", "https://upload.wikimedia.org/wikipedia/commons/1/1c/Joko_Widodo_2014_official_portrait.jpg"}
+    };
+
+    public static ArrayList<President> getListData(){
+        President president = null;
+        ArrayList<President> list = new ArrayList<>();
+        for (int i = 0; i <data.length; i++) {
+            president = new President();
+            president.setName(data[i][0]);
+            president.setRemarks(data[i][1]);
+            president.setPhoto(data[i][2]);
+
+            list.add(president);
+        }
+
+        return list;
+    }
+}
